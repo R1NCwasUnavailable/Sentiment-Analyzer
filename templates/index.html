@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analyzer</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Sentiment Analyzer</h1>
+        <p>Enter a movie review or any sentence to analyze its sentiment.</p>
+        <textarea id="text-input" placeholder="e.g., The movie was fantastic!"></textarea>
+        <button id="analyze-btn">Analyze</button>
+        <div id="result-container">
+            <h2>Result: <span id="result-text">...</span></h2>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('analyze-btn').addEventListener('click', async () => {
+            const textInput = document.getElementById('text-input').value;
+            const resultText = document.getElementById('result-text');
+            const resultContainer = document.getElementById('result-container');
+
+            if (!textInput.trim()) {
+                resultText.textContent = "Please enter some text.";
+                resultText.className = 'neutral';
+                return;
+            }
+
+            resultText.textContent = "Analyzing...";
+            resultText.className = 'neutral';
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: textInput }),
+                });
+
+                const data = await response.json();
+
+                if (data.sentiment) {
+                    resultText.textContent = data.sentiment;
+                    resultText.className = data.sentiment.toLowerCase();
+                } else {
+                    resultText.textContent = 'Error: ' + (data.error || 'Unknown error');
+                    resultText.className = 'negative';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultText.textContent = 'Failed to connect to the server.';
+                resultText.className = 'negative';
+            }
+        });
+    </script>
+</body>
+</html>
